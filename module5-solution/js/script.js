@@ -1,6 +1,5 @@
-$(function () { // Same as document.addEventListener("DOMContentLoaded"...
+$(function () { 
 
-  // Same as document.querySelector("#navbarToggle").addEventListener("blur",...
   $("#navbarToggle").blur(function (event) {
     var screenWidth = window.innerWidth;
     if (screenWidth < 768) {
@@ -40,10 +39,11 @@ var insertProperty = function (string, propName, propValue) {
     .replace(new RegExp(propToReplace, "g"), propValue);
   return string;
 };
+
 var switchMenuToActive = function () {
 
   var classes = document.querySelector("#navHomeButton").className;
-  classes = classes.replace(new RegExp("g"), "");
+  classes = classes.replace(new RegExp("active", "g"), "");
   document.querySelector("#navHomeButton").className = classes;
 
   classes = document.querySelector("#navMenuButton").className;
@@ -53,31 +53,63 @@ var switchMenuToActive = function () {
   }
 };
 
-// On page load (before images or CSS)
 document.addEventListener("DOMContentLoaded", function (event) {
 
-showLoading("#main-content");
-$ajaxUtils.sendGetRequest(allCategoriesUrl,select,true);
-});
+// TODO: STEP 0: Look over the code from
+// *** start ***
+// to
+// *** finish ***
+// below.
+// We changed this code to retrieve all categories from the server instead of
+// simply requesting home HTML snippet. We now also have another function
+// called buildAndShowHomeHTML that will receive all the categories from the server
+// and process them: choose random category, retrieve home HTML snippet, insert that
+// random category into the home HTML snippet, and then insert that snippet into our
+// main page (index.html).
+//
+// TODO: STEP 1: Substitute [...] below with the *value* of the function buildAndShowHomeHTML,
+// so it can be called when server responds with the categories data.
 
+// *** start ***
+// On first load, show home view
+showLoading("#main-content");
+$ajaxUtils.sendGetRequest(
+  allCategoriesUrl,
+  buildAndShowHomeHTML, // ***** <---- TODO: STEP 1: Substitute [...] ******
+  true); // Explicitely setting the flag to get JSON from server processed into an object literal
+});
+// *** finish **
+
+
+// Builds HTML for the home page based on categories array
+// returned from the server.
 function buildAndShowHomeHTML (categories) {
 
   // Load home snippet page
   $ajaxUtils.sendGetRequest(
     homeHtmlUrl,
-    function (event) {
+    function (homeHtml) {
+
+      var chosenCategoryShortName = chooseRandomCategory(categories).short_name;
+
+
+      chosenCategoryShortName = "'" + chosenCategoryShortName + "'";
+      var homeHtmlToInsertIntoMainPage = insertProperty(homeHtml, "randomCategoryShortName", chosenCategoryShortName);
+
+
+      insertHtml('#main-content', homeHtmlToInsertIntoMainPage);
 
     },
-    true); // False here because we are getting just regular HTML from the server, so no need to process JSON.
+    false);
 }
 
 
-// Given array of category objects, returns a random category object.
+
 function chooseRandomCategory (categories) {
-  // Choose a random index into the array (from 0 inclusively until array length (exclusively))
+  
   var randomArrayIndex = Math.floor(Math.random() * categories.length);
 
-  // return category object with that randomArrayIndex
+  
   return categories[randomArrayIndex];
 }
 
@@ -103,7 +135,7 @@ dc.loadMenuItems = function (categoryShort) {
 
 // Builds HTML for the categories page based on the data
 // from the server
-function buildAndShowCategoriesHTML (chicken) {
+function buildAndShowCategoriesHTML (categories) {
   // Load title snippet of categories page
   $ajaxUtils.sendGetRequest(
     categoriesTitleHtml,
